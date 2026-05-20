@@ -26,7 +26,7 @@ class AvtosotuvApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Avtosotuv.uz',
+      title: 'Avtosotuv',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorSchemeSeed: const Color(0xFF1565C0),
@@ -67,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Icon(Icons.directions_car, size: 100, color: Colors.blue[800]),
             const SizedBox(height: 20),
             Text(
-              'Avtosotuv.uz',
+              'Avtosotuv',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.blue[900]),
             ),
             const SizedBox(height: 10),
