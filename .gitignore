@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 media/
 staticfiles/
+db.sqlite3
 flutter_sdk.zip
 .env
 *.apk
