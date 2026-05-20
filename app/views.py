@@ -98,11 +98,10 @@ def product_list_api(request):
     )
     if region:
         qs = qs.filter(user__profile__region=region)
-    paginator = PageNumberPagination()
-    paginator.page_size = 50
-    page_result = paginator.paginate_queryset(qs, request)
+    offset = (page - 1) * 50
+    page_result = qs[offset:offset + 50]
     serializer = ProductSerializer(page_result, many=True, context={'request': request})
-    data = paginator.get_paginated_response(serializer.data).data
+    data = serializer.data
     cache.set(cache_key, data, 60)
     return Response(data)
 
