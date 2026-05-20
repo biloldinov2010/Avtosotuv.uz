@@ -446,53 +446,6 @@ function removeStoryMusic(storyId) {
         });
 }
 
-function saveStoryMusic(storyId) {
-    var trackEl = document.querySelector('#editMusicResults .music-track-item.selected');
-    if (!trackEl) { alert('Qo\'shiqni tanlang!'); return; }
-    var min = parseInt(document.getElementById('editMusicMin').value) || 0;
-    var sec = parseInt(document.getElementById('editMusicSec').value) || 0;
-    var fd = new FormData();
-    fd.append('spotify_track_id', trackEl.dataset.trackId);
-    fd.append('spotify_track_name', trackEl.dataset.trackName);
-    fd.append('spotify_track_artist', trackEl.dataset.trackArtist);
-    fd.append('spotify_track_image', trackEl.dataset.trackImage);
-    fd.append('spotify_preview_url', trackEl.dataset.previewUrl);
-    fd.append('music_start_seconds', String(min * 60 + sec));
-    fd.append('csrfmiddlewaretoken', getCSRFToken());
-    fetch('/story/' + storyId + '/music/edit/', { method: 'POST', body: fd, headers: { 'X-CSRFToken': getCSRFToken() }})
-        .then(function(r) {
-            if (r.ok) {
-                document.getElementById('globalEditMusicModal').style.display = 'none';
-                // Reload story data
-                fetch('/api/stories/').then(function(rr){return rr.json()}).then(function(data){
-                    var list = data.filter(function(s){return s.user.username===gStoryOwner});
-                    if (list.length===0) { closeGlobalStory(); return; }
-                    gStoryCache = list;
-                    showGlobalStory(gStoryIndex);
-                });
-            } else { alert('Xatolik'); }
-        });
-}
-
-function removeStoryMusic(storyId) {
-    if (!confirm('Musiqani olib tashlashni xohlaysizmi?')) return;
-    var fd = new FormData();
-    fd.append('spotify_track_id', '');
-    fd.append('csrfmiddlewaretoken', getCSRFToken());
-    fetch('/story/' + storyId + '/music/edit/', { method: 'POST', body: fd, headers: { 'X-CSRFToken': getCSRFToken() }})
-        .then(function(r) {
-            if (r.ok) {
-                document.getElementById('globalEditMusicModal').style.display = 'none';
-                fetch('/api/stories/').then(function(rr){return rr.json()}).then(function(data){
-                    var list = data.filter(function(s){return s.user.username===gStoryOwner});
-                    if (list.length===0) { closeGlobalStory(); return; }
-                    gStoryCache = list;
-                    showGlobalStory(gStoryIndex);
-                });
-            }
-        });
-}
-
 function selectEditMusic(id, name, artist, albumImage, previewUrl, durationMs) {
     // Remove previous selection
     var items = document.querySelectorAll('#editMusicResults .music-track-item');

@@ -11,7 +11,7 @@ class OnlineMiddleware:
             profile = getattr(request.user, 'profile', None)
             if profile:
                 now = timezone.now()
-                if not profile.last_activity or (now - profile.last_activity).seconds > 60:
+                if not profile.last_activity or (now - profile.last_activity).total_seconds() > 60:
                     Profile = type(profile)
                     Profile.objects.filter(pk=profile.pk).update(last_activity=now)
         response = self.get_response(request)

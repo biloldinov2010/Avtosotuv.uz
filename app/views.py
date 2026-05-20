@@ -22,6 +22,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
 from .serializers import CarSerializer, ProductSerializer, StorySerializer
 from .forms import RegisterForm, VerifyForm, LoginForm
 
@@ -84,7 +85,6 @@ def index(request):
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
-@require_GET
 def product_list_api(request):
     page = int(request.GET.get('page', 1))
     region = request.GET.get('region', '').strip()
@@ -98,9 +98,11 @@ def product_list_api(request):
     )
     if region:
         qs = qs.filter(user__profile__region=region)
-    products = qs.all()
-    serializer = ProductSerializer(products, many=True, context={'request': request})
-    data = serializer.data
+    paginator = PageNumberPagination()
+    paginator.page_size = 50
+    page_result = paginator.paginate_queryset(qs, request)
+    serializer = ProductSerializer(page_result, many=True, context={'request': request})
+    data = paginator.get_paginated_response(serializer.data).data
     cache.set(cache_key, data, 60)
     return Response(data)
 
@@ -128,7 +130,6 @@ def product_like_api(request, pk):
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
-@require_GET
 def story_list_api(request):
     cache_key = 'stories_active'
     cached = cache.get(cache_key)
@@ -754,7 +755,7 @@ def chat_list_api(request):
         return JsonResponse(cached)
     chat_ids = Message.objects.filter(
         Q(sender=request.user) | Q(receiver=request.user)
-    ).values_list('sender', 'receiver').distinct()
+    ).values_list('sender', 'receiver').distinct()[:200]
     user_ids = set()
     for s, r in chat_ids:
         if s == request.user.pk:
@@ -763,7 +764,10 @@ def chat_list_api(request):
             user_ids.add(s)
     chats = []
     for uid in user_ids:
-        other = User.objects.get(pk=uid)
+        try:
+            other = User.objects.get(pk=uid)
+        except User.DoesNotExist:
+            continue
         last_msg = Message.objects.filter(
             Q(sender=request.user, receiver=other) |
             Q(sender=other, receiver=request.user)
@@ -841,10 +845,10 @@ def react_message(request, msg_id):
         msg.reaction = emoji
         msg.save()
     return JsonResponse({'reaction': msg.reaction})
+
 def download_apk(request):
     file_path = os.path.join(settings.BASE_DIR, 'downloads', 'avtosotuv-v1.0.0.apk')
     if not os.path.exists(file_path):
-        from django.http import HttpResponse, HttpResponseNotFound, FileResponse
         return HttpResponseNotFound("Fayl topilmadi")
 
     file_size = os.path.getsize(file_path)
